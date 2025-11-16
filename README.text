@@ -1,0 +1,5 @@
+start 1st getaway 
+after start all anouther service 
+port no is localhost 9000 for all api
+for register api is user/register
+for login is user/login

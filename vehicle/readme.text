@@ -1,0 +1,208 @@
+🚘 Vehicle Service API — Documentation
+
+Version: Production
+Base URL:
+
+http://localhost:8083/vehicles
+
+📌 Overview
+
+This service manages:
+
+Vehicle registration
+
+Uploading RC images (multipart)
+
+Updating vehicle details
+
+KYC verification using external API
+
+Listing vehicles
+
+Deleting vehicles
+
+All requests, except GET, require validations and respond with clean DTOs.
+
+⚠️ Validations (Frontend Must Follow)
+AddVehicleRequest Fields
+Field	Type	Required	Validation
+userId	String	✔ Yes	Not blank
+vehicleNumber	String	✔ Yes	Not blank
+vehicleType	String	Optional	-
+manufacturer	String	Optional	-
+model	String	Optional	-
+manufactureYear	Integer	Optional	Must be between 1900–2100
+fuelType	String	Optional	-
+color	String	Optional	-
+ownerName	String	Optional	-
+ownerAddress	String	Optional	-
+chassisNumber	String	Optional	-
+engineNumber	String	Optional	-
+rcFrontImage	File	Optional	Max 5MB
+rcBackImage	File	Optional	Max 5MB
+🚀 API Endpoints
+1️⃣ Create Vehicle
+POST /vehicles
+
+Content-Type → multipart/form-data
+
+🎯 Description
+
+Creates a new vehicle and uploads RC images to Cloudinary.
+
+🔹 Request Example (Postman)
+
+Send as form-data:
+
+Key	Value	Type
+userId	12345	text
+vehicleNumber	DL01AB1234	text
+vehicleType	Car	text
+manufacturer	Maruti	text
+model	Swift	text
+manufactureYear	2020	number
+fuelType	Petrol	text
+color	White	text
+ownerName	Rahul Sharma	text
+ownerAddress	New Delhi	text
+chassisNumber	CHS123XYZ	text
+engineNumber	ENG987XYZ	text
+rcFrontImage	file.jpg	file
+rcBackImage	file.jpg	file
+✔ Response
+{
+  "vehicleId": "uuid-here",
+  "userId": "12345",
+  "vehicleNumber": "DL01AB1234",
+  "vehicleType": "Car",
+  "manufacturer": "Maruti",
+  "model": "Swift",
+  "manufactureYear": 2020,
+  "fuelType": "Petrol",
+  "color": "White",
+  "ownerName": "Rahul Sharma",
+  "ownerAddress": "New Delhi",
+  "chassisNumber": "CHS123XYZ",
+  "engineNumber": "ENG987XYZ",
+  "rcFrontImageUrl": "...cloudinary...",
+  "rcBackImageUrl": "...cloudinary...",
+  "kycStatus": "PENDING",
+  "createdAt": "2025-01-01T10:00:00",
+  "updatedAt": "..."
+}
+
+2️⃣ Get Vehicle by ID
+GET /vehicles/{id}
+
+Returns full vehicle details.
+
+3️⃣ Get Vehicle by Number
+GET /vehicles/by-number/{number}
+
+Uses Redis caching (if enabled).
+
+4️⃣ List Vehicles (Paginated)
+GET /vehicles?page=0&size=20
+
+Response:
+
+[
+  { ...vehicleDto },
+  { ...vehicleDto }
+]
+
+5️⃣ Update Vehicle
+PUT /vehicles/{id}
+
+Content-Type → multipart/form-data
+
+Same request fields as create
+
+Images optional
+
+Only provided fields are updated
+
+Replaces existing RC images if new ones are uploaded
+
+6️⃣ Delete Vehicle
+DELETE /vehicles/{id}
+
+Deletes DB record and Cloudinary images.
+
+Response:
+
+{ "status": "deleted" }
+
+7️⃣ Verify Vehicle (KYC)
+POST /vehicles/{id}/verify
+❗ Frontend doesn't pass anything
+
+Backend automatically:
+
+Fetches local vehicle
+
+Calls external API
+
+Compares fields:
+
+chassis
+
+engine
+
+owner
+
+number
+
+Saves KYC history
+
+Updates status:
+
+VERIFIED
+
+FAILED
+
+MANUAL_CHECK
+
+✔ Response
+{
+  "vehicleId": "...",
+  "kycStatus": "VERIFIED"
+}
+
+🧾 Error Response Format
+
+When validation fails:
+
+{
+  "status": 400,
+  "error": "VALIDATION_ERROR",
+  "message": "User ID is required"
+}
+
+
+Database / server error:
+
+{
+  "status": 500,
+  "error": "SERVER_ERROR",
+  "message": "Column 'user_id' cannot be null"
+}
+
+📝 Important Notes for Frontend
+✔ MUST send multipart/form-data for:
+
+create
+
+update
+
+✔ MUST include userId always
+
+Otherwise backend throws 400 or 500.
+
+✔ Do NOT send empty "" strings → send null or remove field.
+✔ Images are optional
+
+If you don’t upload new images on update → existing remain.
+
+✔ For file uploads on React Native / Web:
+Content-Type: multipart/form-data
