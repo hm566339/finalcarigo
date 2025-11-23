@@ -8,9 +8,6 @@ import jakarta.validation.constraints.*;
 @Data
 public class AddVehicleRequest {
 
-    @NotBlank(message = "User ID is required")
-    private String userId;
-
     @NotBlank(message = "Vehicle number is required")
     private String vehicleNumber;
 
@@ -37,9 +34,9 @@ public class AddVehicleRequest {
     private String engineNumber;
 
     // Multipart images
-    @Size(max = 5 * 1024 * 1024, message = "Front RC image too large (max 5MB)")
+    // @Size(max = 5 * 1024 * 1024, message = "Front RC image too large (max 5MB)")
     private MultipartFile rcFrontImage;
 
-    @Size(max = 5 * 1024 * 1024, message = "Back RC image too large (max 5MB)")
+    // @Size(max = 5 * 1024 * 1024, message = "Back RC image too large (max 5MB)")
     private MultipartFile rcBackImage;
 }

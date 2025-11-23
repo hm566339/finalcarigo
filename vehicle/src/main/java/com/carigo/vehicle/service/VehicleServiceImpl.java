@@ -1,5 +1,6 @@
 package com.carigo.vehicle.service;
 
+import com.carigo.vehicle.client.UserVerify;
 import com.carigo.vehicle.dto.AddVehicleRequest;
 import com.carigo.vehicle.dto.VehicleDto;
 import com.carigo.vehicle.exception.ResourceNotFoundException;
@@ -8,14 +9,15 @@ import com.carigo.vehicle.mapper.VehicleMapper;
 import com.carigo.vehicle.model.VehicleEntity;
 import com.carigo.vehicle.repository.VehicleRepository;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,24 +25,24 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class VehicleServiceImpl implements VehicleService {
 
     private final VehicleRepository repository;
     private final CloudinaryService cloudinaryService;
     private final VerificationService verificationService;
 
-    public VehicleServiceImpl(VehicleRepository repository,
-            CloudinaryService cloudinaryService,
-            VerificationService verificationService) {
-        this.repository = repository;
-        this.cloudinaryService = cloudinaryService;
-        this.verificationService = verificationService;
-    }
+    private final UserVerify userVerify;
 
     // CREATE VEHICLE
     @Override
     @Transactional
-    public VehicleDto addVehicle(AddVehicleRequest request) throws IOException {
+    public VehicleDto addVehicle(Long id, AddVehicleRequest request) throws IOException {
+
+        Boolean userExists = userVerify.verifyUserExists(id);
+        if (userExists == null || !userExists) {
+            throw new IllegalArgumentException("User with ID " + id + " does not exist.");
+        }
 
         repository.findByVehicleNumber(request.getVehicleNumber())
                 .ifPresent(v -> {
@@ -49,14 +51,27 @@ public class VehicleServiceImpl implements VehicleService {
 
         VehicleEntity entity = VehicleMapper.toEntity(request);
 
-        // Upload images
-        String folder = "vehicles/" + entity.getVehicleId() + "/rc";
+        // 🔥 REAL FIX — Set userId in the actual entity
+        entity.setUserId(id);
 
+        String folder = "vehicles/" + entity.getVehicleId() + "/rc";
         uploadImages(request, entity, folder);
 
-        VehicleEntity saved = repository.save(entity);
+        try {
+            VehicleEntity saved = repository.save(entity);
+            return VehicleMapper.toDto(saved);
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException("Vehicle number already exists");
+        }
+    }
 
-        return VehicleMapper.toDto(saved);
+    @Override
+    public String insertUserId(Long userId) {
+        VehicleEntity entity = new VehicleEntity();
+        entity.setUserId(userId);
+        repository.save(entity);
+        return "User ID inserted successfully.";
+
     }
 
     // GET BY ID

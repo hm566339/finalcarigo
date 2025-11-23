@@ -40,7 +40,6 @@ public class VehicleMapper {
     public static VehicleEntity toEntity(AddVehicleRequest r) {
         VehicleEntity e = new VehicleEntity();
 
-        e.setUserId(r.getUserId());
         e.setVehicleNumber(r.getVehicleNumber());
         e.setVehicleType(r.getVehicleType());
         e.setManufacturer(r.getManufacturer());

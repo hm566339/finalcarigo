@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -14,13 +13,13 @@ import org.springframework.web.bind.annotation.*;
 import com.hms.user.userms.dto.LoginDTO;
 import com.hms.user.userms.dto.ResponseDTO;
 import com.hms.user.userms.dto.UserDTO;
+import com.hms.user.userms.dto.UserResponseDTO;
 import com.hms.user.userms.exception.HsmException;
+import com.hms.user.userms.jwt.CustomUserDetail;
 import com.hms.user.userms.jwt.JwtUtil;
 import com.hms.user.userms.service.UserService;
 
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/user")
@@ -43,25 +42,35 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ResponseDTO> registerUser(@RequestBody @Valid UserDTO userDTO) throws HsmException {
         userService.registerUser(userDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO("USER_REGISTERED_SUCCESSFULLY"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ResponseDTO("USER_REGISTERED_SUCCESSFULLY"));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> postMethodName(@RequestBody LoginDTO loginDTO) throws HsmException {
+    public ResponseEntity<String> login(@RequestBody LoginDTO loginDTO) throws HsmException {
+
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginDTO.getEmail(), loginDTO.getPassword()));
+                    new UsernamePasswordAuthenticationToken(
+                            loginDTO.getEmail(),
+                            loginDTO.getPassword()));
         } catch (AuthenticationException e) {
             throw new HsmException("INVALID_CREDENTIALS");
         }
-        final UserDetails userDetails = userDetailService.loadUserByUsername(loginDTO.getEmail());
-        final String jwt = jwtUtil.generateToken(userDetails);
-        return new ResponseEntity<>(jwt, HttpStatus.OK);
+
+        // MUST BE CAST TO CustomUserDetail
+        CustomUserDetail user = (CustomUserDetail) userDetailService.loadUserByUsername(loginDTO.getEmail());
+
+        // Generate RSA JWT
+        final String jwt = jwtUtil.generateToken(user);
+
+        return ResponseEntity.ok(jwt);
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        return new ResponseEntity<>("test", HttpStatus.OK);
+    @GetMapping("/{id}")
+    public ResponseEntity<Boolean> checkUserExists(@PathVariable Long id) {
+        boolean exists = userService.userExists(id);
+        return ResponseEntity.ok(exists);
     }
 
 }

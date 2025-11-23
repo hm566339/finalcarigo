@@ -2,51 +2,91 @@ package com.hms.gateway.filter;
 
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
-@Component
+import jakarta.annotation.PostConstruct;
+
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
+@Component("TokenFilter")
 public class TokenFilter extends AbstractGatewayFilterFactory<TokenFilter.Config> {
 
-    private static final String SECRET_KEY = "WN79UZ7T9DCNF90HEQD8AJAENT4YTACEPV57H0S922NTTUCNTQFF6WAGU82NNZ5WWSN215NGFIBZ2TWX9W7OSPTZQ30843E6WD0EVCMHGBHGKUQ23ZDPKEJUT7LVJMQW2OM7VN7MQJQZ4ZAAVV33GT";
+    private PublicKey publicKey;
 
     public TokenFilter() {
         super(Config.class);
     }
 
+    @PostConstruct
+    public void loadPublicKey() throws Exception {
+        ClassPathResource resource = new ClassPathResource("keys/public.pem");
+        String pem = new String(resource.getInputStream().readAllBytes());
+
+        pem = pem.replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replaceAll("\\s+", "");
+
+        byte[] decoded = Base64.getDecoder().decode(pem);
+
+        X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decoded);
+        publicKey = KeyFactory.getInstance("RSA").generatePublic(keySpec);
+
+        System.out.println("🔑 Public key loaded successfully in Gateway!");
+    }
+
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
-            // String path = exchange.getRequest().getURI().getPath();
+
             String path = exchange.getRequest().getPath().toString();
+
+            // PUBLIC API
             if (path.equals("/user/login") || path.equals("/user/register")) {
-                return chain.filter(exchange.mutate().request(r -> r.header("X-SECRET-KEY", "SECRET")).build());
+                return chain.filter(
+                        exchange.mutate()
+                                .request(r -> r.header("X-SECRET-KEY", "SECRET"))
+                                .build());
             }
+
+            // PRIVATE API — JWT REQUIRED
             HttpHeaders headers = exchange.getRequest().getHeaders();
-            if (!headers.containsKey(HttpHeaders.AUTHORIZATION)) {
-                throw new RuntimeException("Missing Authorization header");
-            }
             String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                throw new RuntimeException("Invalid Authorization header");
+                throw new RuntimeException("Missing or invalid Authorization header");
             }
+
             String token = authHeader.substring(7);
-            // Here you can add logic to validate the token
+
             try {
-                Claims claims = Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
-                exchange = exchange.mutate().request(r -> r.header("X-SECRET-KEY", "SECRET")).build();
+                Claims claims = Jwts.parser()
+                        .verifyWith(publicKey) // 🔥 NEW 0.12.5 METHOD
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload();
+
+                System.out.println("✅ JWT Verified: " + claims.getSubject());
+
             } catch (Exception e) {
-                throw new RuntimeException("Invalid token");
+                System.out.println("❌ Gateway JWT Error: " + e.getMessage());
+                throw new RuntimeException("Invalid token: " + e.getMessage());
             }
-            return chain.filter(exchange);
+
+            return chain.filter(
+                    exchange.mutate()
+                            .request(r -> r.header("X-SECRET-KEY", "SECRET"))
+                            .build());
         };
     }
 
     public static class Config {
-
     }
-
 }

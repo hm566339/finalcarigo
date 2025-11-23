@@ -10,7 +10,7 @@ public class VehicleDto {
 
     private String vehicleId;
 
-    private String userId;
+    private Long userId;
 
     private String vehicleNumber;
 

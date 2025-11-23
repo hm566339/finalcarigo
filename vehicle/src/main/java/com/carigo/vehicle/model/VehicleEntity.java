@@ -1,6 +1,7 @@
 package com.carigo.vehicle.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,6 +12,7 @@ import com.carigo.vehicle.helper.KycStatus;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "vehicles", indexes = {
         @Index(name = "idx_vehicle_number", columnList = "vehicle_number"),
@@ -19,11 +21,11 @@ import com.carigo.vehicle.helper.KycStatus;
 public class VehicleEntity {
 
     @Id
-    @Column(name = "vehicle_id", nullable = false, updatable = false, length = 50)
+    @Column(name = "vehicle_id", nullable = false, updatable = false)
     private String vehicleId = UUID.randomUUID().toString();
 
     @Column(name = "user_id", nullable = false, length = 50)
-    private String userId;
+    private Long userId;
 
     @Column(name = "vehicle_number", nullable = false, unique = true, length = 20)
     private String vehicleNumber; // RC Number

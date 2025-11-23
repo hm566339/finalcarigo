@@ -28,11 +28,11 @@ public class VehicleController {
     }
 
     // CREATE VEHICLE
-    @PostMapping(consumes = { "multipart/form-data" })
-    public ResponseEntity<VehicleDto> addVehicle(
+    @PostMapping(value = "/{id}", consumes = { "multipart/form-data" })
+    public ResponseEntity<VehicleDto> addVehicle(@PathVariable Long id,
             @ModelAttribute @Valid AddVehicleRequest request) throws IOException {
 
-        return ResponseEntity.ok(vehicleService.addVehicle(request));
+        return ResponseEntity.ok(vehicleService.addVehicle(id, request));
     }
 
     // GET BY ID

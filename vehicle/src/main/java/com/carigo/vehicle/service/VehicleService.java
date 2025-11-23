@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.carigo.vehicle.dto.AddVehicleRequest;
 import com.carigo.vehicle.dto.VehicleDto;
+import com.carigo.vehicle.model.VehicleEntity;
 
 /**
  * Vehicle Service Interface
@@ -12,7 +13,7 @@ import com.carigo.vehicle.dto.VehicleDto;
  */
 public interface VehicleService {
 
-    VehicleDto addVehicle(AddVehicleRequest request) throws IOException;
+    VehicleDto addVehicle(Long id, AddVehicleRequest request) throws IOException;
 
     VehicleDto getVehicleById(String id);
 
@@ -25,4 +26,9 @@ public interface VehicleService {
     void deleteVehicle(String id);
 
     List<VehicleDto> listAllVehicles(int page, int size);
+
+    String insertUserId(Long userId);
+
+    List<VehicleEntity> getVehiclesByUserId(Long userId);
+
 }

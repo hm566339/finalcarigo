@@ -26,7 +26,7 @@ public class VerificationService {
     }
 
     // Main KYC verification logic
-    public boolean matchWithExternal(VehicleEntity local, Object externalApiResponse) {
+    boolean matchWithExternal(VehicleEntity local, Object externalApiResponse) {
 
         if (externalApiResponse == null || !(externalApiResponse instanceof Map)) {
             saveHistory(local, "FAILED", "Invalid or empty response from external API");
@@ -54,7 +54,7 @@ public class VerificationService {
                 && extOwner.equalsIgnoreCase(local.getOwnerName());
 
         boolean numberMatch = extNumber != null
-                && extNumber.equalsIgnoreCase(local.getVehicleNumber());
+                && extNumber.equalsIgnoreCase(local.getVehicleId());
 
         // ---------------------------------------------
         // PRIORITY BASED REAL-WORLD KYC VERIFICATION

@@ -1,7 +1,7 @@
 package com.hms.user.userms.service;
 
-import com.hms.user.userms.dto.LoginDTO;
 import com.hms.user.userms.dto.UserDTO;
+import com.hms.user.userms.dto.UserResponseDTO;
 import com.hms.user.userms.exception.HsmException;
 
 public interface UserService {
@@ -9,11 +9,13 @@ public interface UserService {
 
     public UserDTO loginUser(UserDTO userDTO) throws HsmException;
 
-    public UserDTO getUserById(Long id) throws HsmException;
+    public UserResponseDTO getUserById(Long id) throws HsmException;
 
-    public void updateUser(UserDTO userDTO);
+    public void updateUser(Long id, UserDTO userDTO);
 
     public UserDTO getUser(String email) throws HsmException;
 
-    // UserDTO loginUser(LoginDTO loginDTO) throws HsmException;
+    public void deleteUser(Long id) throws HsmException;
+
+    public boolean userExists(Long id);
 }
