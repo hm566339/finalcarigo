@@ -1,0 +1,29 @@
+spring:
+    application:
+        name: booking
+    
+    datasource:
+         url: jdbc:mysql://localhost:3306/bookingdb
+         username: root
+         password: 123456
+
+    jpa:
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+        properties:
+            hibernate:
+                format_sql: true
+
+    jackson:
+        serialization:
+            write-dates-as-timestamps: false
+
+cloudinary:
+  cloud_name: dhdprfqyj
+  api_key: 619796154224257
+  api_secret: -wkxOB8OdGB6h-d6r07lV0pgaGQ
+
+server:
+  port: 8084
+

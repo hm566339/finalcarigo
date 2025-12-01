@@ -1,0 +1,133 @@
+# version: '3.9'
+
+# services:
+
+#   mysql:
+#     image: mysql:8
+#     container_name: mysql
+#     environment:
+#       MYSQL_ROOT_PASSWORD: 123456
+#       MYSQL_DATABASE: userdb
+#     ports:
+#       - "3307:3306"
+#     volumes:
+#       - mysql_data:/var/lib/mysql
+
+#   eureka-server:
+#     build: ./serviceregistry
+#     container_name: eureka-server
+#     ports:
+#       - "8761:8761"
+
+#   userms:
+#     build: ./userms
+#     container_name: userms
+#     depends_on:
+#       - mysql
+#       - eureka-server
+#     ports:
+#       - "8080:8080"
+#     environment:
+#       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/userdb
+#       SPRING_DATASOURCE_USERNAME: root
+#       SPRING_DATASOURCE_PASSWORD: 123456
+
+#       SPRING_MAIL_HOST: smtp.gmail.com
+#       SPRING_MAIL_PORT: 587
+#       SPRING_MAIL_USERNAME: mk9504400@gmail.com
+#       SPRING_MAIL_PASSWORD: giculvqcssvxvtnv
+
+#   gateway:
+#     build: ./gateway
+#     container_name: gateway
+#     depends_on:
+#       - eureka-server
+#     ports:
+#       - "9000:9000"
+
+# volumes:
+#   mysql_data:
+
+services:
+
+  serviceregistry:
+    build: ./serviceregistry
+    container_name: serviceregistry
+    ports:
+      - "8761:8761"
+
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  userms:
+    build: ./userms
+    container_name: userms
+    depends_on:
+      - serviceregistry
+      - mysql
+    ports:
+      - "8080:8080"
+
+  profile:
+    build: ./profile
+    container_name: profile
+    depends_on:
+      - serviceregistry
+      - mysql
+      - kafka
+    ports:
+      - "8081:8081"
+
+  vehicle:
+    build: ./vehicle
+    container_name: vehicle
+    depends_on:
+      - serviceregistry
+      - mysql
+    environment:
+      EXTERNAL_VEHICLE_API_URL: "https://external-api.com/vehicle"
+    ports:
+      - "8083:8083"
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    depends_on:
+      - serviceregistry
+      - userms
+      - profile
+    ports:
+      - "9000:9000"
+
+volumes:
+  mysql_data:

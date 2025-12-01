@@ -1,0 +1,96 @@
+spring:
+  application:
+    name: profile
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/profiledb
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # ❗ Dev only. Production me validate karna.
+      show-sql: true       # ❗ Production me false rakho
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+# Custom messages
+messages:
+  USER_ALREADY_EXISTS: "User with the given email already exists."
+  USER_NOT_FOUND: "User with the given ID not found."
+  INVALID_CREDENTIALS: "Invalid email or password."
+
+server:
+  port: 8081
+
+# --------------------------
+# CLOUDINARY CONFIG
+# --------------------------
+cloudinary:
+  cloud_name: dhdprfqyj
+  api_key: 619796154224257
+  api_secret: -wkxOB8OdGB6h-d6r07lV0pgaGQ
+
+# --------------------------
+# KAFKA CONFIG
+# --------------------------
+kafka:
+  bootstrap: ${KAFKA_BOOTSTRAP:localhost:9092}
+
+# --------------------------
+# UIDAI / Aadhaar API CONFIG
+# --------------------------
+aadhaar:
+  api:
+    base-url: ${AADHAAR_BASE_URL:https://api.uidai.gov.in}
+    client-id: ${AADHAAR_CLIENT_ID}
+    secret: ${AADHAAR_CLIENT_SECRET}
+    
+profiles:
+    active: dev
+
+
+
+# spring:
+#   application:
+#     name: profile
+
+#   datasource:
+#     url: jdbc:mysql://mysql:3306/profiledb
+#     username: root
+#     password: 123456
+#     driver-class-name: com.mysql.cj.jdbc.Driver
+
+#   jpa:
+#     hibernate:
+#       ddl-auto: update
+#     properties:
+#       hibernate:
+#         dialect: org.hibernate.dialect.MySQLDialect
+
+# server:
+#   port: 8081
+
+# cloudinary:
+#   cloud_name: dhdprfqyj
+#   api_key: 619796154224257
+#   api_secret: -wkxOB8OdGB6h-d6r07lV0pgaGQ
+
+# kafka:
+#   bootstrap: kafka:9092
+
+# aadhaar:
+#   api:
+#     base-url: https://api.uidai.gov.in
+#     client-id: ${AADHAAR_CLIENT_ID}
+#     secret: ${AADHAAR_CLIENT_SECRET}
+
+# eureka:
+#   client:
+#     service-url:
+#       defaultZone: http://serviceregistry:8761/eureka
+#   profiles:
+#     active: dev
