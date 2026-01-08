@@ -14,7 +14,7 @@ public interface UserService {
 
     UserResponseDTO getUserById(Long id) throws HsmException;
 
-    void updateUser(Long id, UserDTO userDTO);
+    String updateUser(Long id, UserDTO userDTO);
 
     UserDTO getUser(String email) throws HsmException;
 
@@ -22,5 +22,9 @@ public interface UserService {
 
     boolean userExists(Long id);
 
-    public List<UserResponseDTO> getAllUsers();
+    List<UserResponseDTO> getAllUsers();
+
+    long countAllUsers();
+
+    long countBlockedUsers();
 }

@@ -1,9 +1,12 @@
 package com.hms.profile.controller;
 
+import com.hms.profile.dto.CarOwnerResponseDTO;
 import com.hms.profile.dto.RenterRequestDTO;
 import com.hms.profile.dto.RenterResponseDTO;
 import com.hms.profile.dto.ResponseDTO;
+import com.hms.profile.dto.UpdateUser;
 import com.hms.profile.dto.UserDTO;
+import com.hms.profile.model.ProfileKycHistory;
 import com.hms.profile.model.Renter;
 import com.hms.profile.service.RenterService;
 
@@ -152,6 +155,52 @@ public class RenterController {
     @GetMapping("/user/{id}")
     public ResponseEntity<Boolean> userIDisPresent(@PathVariable("id") Long id) {
         return ResponseEntity.ok(service.exitUserID(id));
+    }
+
+    @PutMapping("/renters/update/email-name/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UpdateUser user) {
+        return ResponseEntity.ok(service.UpdateEmail_name(id, user));
+    }
+
+    @GetMapping("/{id}/aadhaar-front-url")
+    public ResponseEntity<String> getAadhaarFrontUrl(@PathVariable Long id) {
+        return ResponseEntity.ok(service.aadhaarFrontUrl(id));
+    }
+
+    @GetMapping("/{id}/aadhaar-back-url")
+    public ResponseEntity<String> getAadhaarBackUrl(@PathVariable Long id) {
+        return ResponseEntity.ok(service.aadhaarBackUrl(id));
+    }
+
+    @GetMapping("/{id}/selfie-url")
+    public ResponseEntity<String> getSelfieUrl(@PathVariable Long id) {
+        return ResponseEntity.ok(service.selfieUrl(id));
+    }
+
+    @GetMapping("/admin/renters")
+    public ResponseEntity<List<RenterResponseDTO>> getAllRenters(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+
+        return ResponseEntity.ok(service.getAllRenters(page, size));
+    }
+
+    @RolesAllowed({ "REANT", "ADMIN" })
+    @GetMapping("/{id}/kyc/history")
+    public ResponseEntity<List<ProfileKycHistory>> getKycHistory(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(service.getRenterKycHistory(id));
+    }
+
+    @GetMapping("/count")
+    public long countRenters() {
+        return service.countRenters();
+    }
+
+    @GetMapping("/count/kyc/pending")
+    public long pendingRenterKyc() {
+        return service.pendingRenterKyc();
     }
 
 }

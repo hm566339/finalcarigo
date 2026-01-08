@@ -3,14 +3,19 @@ package com.hms.profile.service.impl;
 import com.hms.profile.client.VehicleUserId;
 import com.hms.profile.dto.CarOwnerRequestDTO;
 import com.hms.profile.dto.CarOwnerResponseDTO;
+import com.hms.profile.dto.UpdateUser;
 import com.hms.profile.dto.UserDTO;
 import com.hms.profile.exception.ResourceNotFoundException;
+import com.hms.profile.helper.Status;
 import com.hms.profile.mapper.CarOwnerMapper;
 import com.hms.profile.model.CarOwner;
+import com.hms.profile.model.ProfileKycHistory;
 import com.hms.profile.repository.CarOwnerRepository;
+import com.hms.profile.repository.ProfileKycHistoryRepository;
 import com.hms.profile.service.CarOwnerService;
 import com.hms.profile.service.CloudinaryService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +35,7 @@ public class CarOwnerServiceimpl implements CarOwnerService {
 
     private final CarOwnerRepository repo;
     private final CloudinaryService cloudinary;
+    private final ProfileKycHistoryRepository historyRepo;
 
     // ---------------------------------------------------------------------
     // 1. CREATE OWNER
@@ -123,6 +129,24 @@ public class CarOwnerServiceimpl implements CarOwnerService {
         owner.setDrivingLicenseNumber(url);
 
         return save(owner);
+    }
+    // ---------------------------------------------------------------------
+    // GET ALL FILE
+    // ---------------------------------------------------------------------
+
+    public String aadharFront(Long id) {
+        CarOwner owner = getEntity(id);
+        return owner.getAadhaarFrontUrl();
+    }
+
+    public String aadharBack(Long id) {
+        CarOwner owner = getEntity(id);
+        return owner.getAadhaarBackUrl();
+    }
+
+    public String selfie(Long id) {
+        CarOwner owner = getEntity(id);
+        return owner.getSelfieUrl();
     }
 
     // ---------------------------------------------------------------------
@@ -313,5 +337,78 @@ public class CarOwnerServiceimpl implements CarOwnerService {
     // }
     // return true;
     // }
+
+    @Override
+    public String UpdateEmail_name(Long id, UpdateUser updateUser) {
+
+        CarOwner owner = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Owner not found"));
+
+        // OPTIONAL: EMAIL UNIQUE CHECK (DEFENSIVE)
+        if (!owner.getEmail().equalsIgnoreCase(updateUser.getEmail()) &&
+                repo.findByEmail(updateUser.getEmail()).isPresent()) {
+            throw new RuntimeException("EMAIL_ALREADY_EXISTS");
+        }
+
+        owner.setEmail(updateUser.getEmail());
+        owner.setName(updateUser.getName());
+
+        repo.save(owner);
+        return "User Updated";
+    }
+
+    @Override
+    public List<CarOwnerResponseDTO> getAllOwners(int page, int size) {
+
+        return repo.findAll(PageRequest.of(page, size))
+                .stream()
+                .map(CarOwnerMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<ProfileKycHistory> getOwnerKycHistory(Long ownerId) {
+
+        // owner exists check
+        repo.findById(ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
+
+        return historyRepo
+                .findByProfileIdAndProfileTypeOrderByCreatedAtDesc(
+                        ownerId,
+                        "OWNER");
+    }
+
+    @Override
+    @Transactional
+    public CarOwnerResponseDTO blockOwner(Long ownerId) {
+
+        CarOwner owner = repo.findById(ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
+
+        owner.setStatus(Status.BLOCKED);
+
+        return CarOwnerMapper.toDto(repo.save(owner));
+    }
+
+    @Override
+    @Transactional
+    public CarOwnerResponseDTO unblockOwner(Long ownerId) {
+
+        CarOwner owner = repo.findById(ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
+
+        owner.setStatus(Status.ACTIVE);
+
+        return CarOwnerMapper.toDto(repo.save(owner));
+    }
+
+    public long countOwners() {
+        return repo.count();
+    }
+
+    public long pendingOwnerKyc() {
+        return repo.countByKycStatus("INCOMPLETE");
+    }
 
 }

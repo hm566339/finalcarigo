@@ -13,4 +13,6 @@ public interface RenterRepository extends JpaRepository<Renter, Long> {
 
     Boolean existsByDrivingLicenseNumber(String dl);
 
+    long countByKycStatus(String status);
+
 }

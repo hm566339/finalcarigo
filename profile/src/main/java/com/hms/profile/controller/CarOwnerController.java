@@ -3,7 +3,9 @@ package com.hms.profile.controller;
 import com.hms.profile.dto.CarOwnerRequestDTO;
 import com.hms.profile.dto.CarOwnerResponseDTO;
 import com.hms.profile.dto.ResponseDTO;
+import com.hms.profile.dto.UpdateUser;
 import com.hms.profile.dto.UserDTO;
+import com.hms.profile.model.ProfileKycHistory;
 import com.hms.profile.security.RoleRequired;
 import com.hms.profile.service.CarOwnerService;
 
@@ -34,7 +36,7 @@ public class CarOwnerController {
     }
 
     // --------------------- GET PROFILE ----------------------
-    @RolesAllowed("OWNER")
+    // @RolesAllowed("OWNER")
     @GetMapping("/{id}")
     public ResponseEntity<CarOwnerResponseDTO> getOwner(@PathVariable Long id) {
         return ResponseEntity.ok(service.getOwnerById(id));
@@ -46,7 +48,7 @@ public class CarOwnerController {
         return ResponseEntity.ok(service.getOwnerByEmail(email));
     }
 
-    @RolesAllowed("OWNER") // --------------------- UPDATE PROFILE ---------------------
+    @RolesAllowed("OWNER") // --------------------- UPDATE PROFILE
     @PutMapping("/{id}")
     public ResponseEntity<CarOwnerResponseDTO> updateOwner(
             @PathVariable Long id,
@@ -195,10 +197,61 @@ public class CarOwnerController {
         return ResponseEntity.ok(exists);
     }
 
-    // @RolesAllowed("OWNER")
-    // @GetMapping("/is-presentvehicle/{id}")
-    // public ResponseEntity<Boolean> ispreserntVehicle(@PathVariable String id) {
-    // boolean exit = service.verifyVehicleNumber(id);
-    // return ResponseEntity.ok(exit);
-    // }
+    @PutMapping("/car-owners/update/email-name/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UpdateUser user) {
+        return ResponseEntity.ok(service.UpdateEmail_name(id, user));
+    }
+
+    @GetMapping("/{id}/aadhaar-front-url")
+    public ResponseEntity<String> getAadharFornt(@PathVariable Long id) {
+        return ResponseEntity.ok(service.aadharFront(id));
+    }
+
+    @GetMapping("/{id}/aadhaar-back-url")
+    public ResponseEntity<String> getAadharBack(@PathVariable Long id) {
+        return ResponseEntity.ok(service.aadharBack(id));
+    }
+
+    @GetMapping("/{id}/selfie-url")
+    public ResponseEntity<String> getSelfie(@PathVariable Long id) {
+        return ResponseEntity.ok(service.selfie(id));
+    }
+
+    @GetMapping("/admin/car-owners")
+    public ResponseEntity<List<CarOwnerResponseDTO>> getAllOwners(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+
+        return ResponseEntity.ok(service.getAllOwners(page, size));
+    }
+
+    @RolesAllowed({ "OWNER", "ADMIN" })
+    @GetMapping("/{id}/kyc/history")
+    public ResponseEntity<List<ProfileKycHistory>> getKycHistory(
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(service.getOwnerKycHistory(id));
+    }
+
+    @PostMapping("/block/{id}")
+    public ResponseEntity<CarOwnerResponseDTO> blockOwner(@PathVariable Long id) {
+        // vehicle ko bhi block krna hai
+        return ResponseEntity.ok(service.blockOwner(id));
+    }
+
+    @PostMapping("/unblock/{id}")
+    public ResponseEntity<CarOwnerResponseDTO> unblockOwner(@PathVariable Long id) {
+        return ResponseEntity.ok(service.unblockOwner(id));
+    }
+
+    @GetMapping("/count")
+    public long countOwners() {
+        return service.countOwners();
+    }
+
+    @GetMapping("/count/kyc/pending")
+    public long pendingOwnerKyc() {
+        return service.pendingOwnerKyc();
+    }
+
 }

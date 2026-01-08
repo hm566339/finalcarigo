@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.hms.user.userms.client.OwnerClient;
 import com.hms.user.userms.client.RenterClient;
+import com.hms.user.userms.dto.UpdateUser;
 import com.hms.user.userms.dto.UserDTO;
 import com.hms.user.userms.dto.UserResponseDTO;
 import com.hms.user.userms.exception.HsmException;
@@ -118,20 +119,53 @@ public class UserServiceImpl implements UserService {
         return responseDTO;
     }
 
+    @Transactional
     @Override
-    public void updateUser(Long id, UserDTO userDTO) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public String updateUser(Long id, UserDTO userDTO) {
 
-        user.setName(userDTO.getName());
-        user.setEmail(userDTO.getEmail());
-        if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("USER_NOT_FOUND"));
+
+        // ---------------- EMAIL UPDATE (ONLY IF PROVIDED & CHANGED) ----------------
+        if (userDTO.getEmail() != null && !userDTO.getEmail().isBlank()) {
+
+            // email changed?
+            if (!userDTO.getEmail().equalsIgnoreCase(user.getEmail())) {
+
+                // uniqueness check
+                if (userRepository.existsByEmailAndIdNot(userDTO.getEmail(), id)) {
+                    throw new RuntimeException("EMAIL_ALREADY_IN_USE");
+                }
+
+                user.setEmail(userDTO.getEmail());
+            }
+        }
+
+        // ---------------- NAME UPDATE (OPTIONAL) ----------------
+        if (userDTO.getName() != null && !userDTO.getName().isBlank()) {
+            user.setName(userDTO.getName());
+        }
+
+        // ---------------- PASSWORD UPDATE (OPTIONAL) ----------------
+        if (userDTO.getPassword() != null && !userDTO.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
-        user.setRole(userDTO.getRole());
 
+        // ---------------- SAVE USER ----------------
         userRepository.save(user);
 
+        // ---------------- SYNC PROFILE SERVICE ----------------
+        UpdateUser update = new UpdateUser();
+        update.setName(user.getName());
+        update.setEmail(user.getEmail());
+
+        if (user.getRole() == Roles.OWNER) {
+            ownerClient.updateUser(id, update);
+        } else if (user.getRole() == Roles.REANT) {
+            renterClient.updateUser(id, update);
+        }
+
+        return "User updated successfully";
     }
 
     @Override
@@ -211,6 +245,16 @@ public class UserServiceImpl implements UserService {
             responseDTO.setRole(user.getRole());
             return responseDTO;
         }).toList();
+    }
+
+    @Override
+    public long countAllUsers() {
+        return userRepository.count();
+    }
+
+    @Override
+    public long countBlockedUsers() {
+        return userRepository.countByBlockedTrue();
     }
 
 }

@@ -14,4 +14,6 @@ public interface CarOwnerRepository extends JpaRepository<CarOwner, Long> {
 
     // boolean existsByVehicleNumber(String vehicleNumber);
 
+    long countByKycStatus(String status);
+
 }

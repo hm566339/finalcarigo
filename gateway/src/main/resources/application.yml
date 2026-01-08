@@ -2,11 +2,14 @@ spring:
   application:
     name: gateway
 
+  codec:
+    max-in-memory-size: 20MB
+
   cloud:
     gateway:
       routes:
 
-        # ---------------- USER SERVICE ----------------
+        # ================= USER SERVICE =================
         - id: userms
           uri: http://localhost:8080
           predicates:
@@ -14,51 +17,81 @@ spring:
           filters:
             - TokenFilter
 
-        # ---------------- CAR OWNER ----------------
-        - id: carowner
+        # ================= PROFILE SERVICE =================
+        - id: car-owners
           uri: http://localhost:8081
           predicates:
             - Path=/car-owners/**
           filters:
             - TokenFilter
 
-        # ---------------- RENTER ----------------
-        - id: renter
+        - id: renters
           uri: http://localhost:8081
           predicates:
             - Path=/renters/**
           filters:
             - TokenFilter
 
-        # ---------------- KYC ----------------
-        - id: kyc
+        - id: profile-kyc
           uri: http://localhost:8081
           predicates:
             - Path=/kyc/**
           filters:
             - TokenFilter
-        # ---------------- VEHICLES ----------------
+
+        # ================= VEHICLE SERVICE =================
         - id: vehicles
           uri: http://localhost:8083
           predicates:
             - Path=/vehicles/**
           filters:
             - TokenFilter
-        # ------------------dl-----------------------
+
+        # ================= DRIVING LICENSE =================
         - id: drivinglicense
           uri: http://localhost:8082
           predicates:
             - Path=/dl/**
           filters:
             - TokenFilter
-        # ------------------booking------------------
-        - id: drivinglicense
+
+        # ================= BOOKING SERVICE =================
+        - id: bookings-renter
           uri: http://localhost:8084
           predicates:
-            - Path=/bookings/**
+            - Path=/renter/bookings/**
           filters:
             - TokenFilter
-            
+
+        - id: bookings-owner
+          uri: http://localhost:8084
+          predicates:
+            - Path=/owner/bookings/**
+          filters:
+            - TokenFilter
+
+        - id: bookings-admin
+          uri: http://localhost:8084
+          predicates:
+            - Path=/admin/bookings/**
+          filters:
+            - TokenFilter
+
+        # ================= DASHBOARD SERVICE =================
+        - id: admin-dashboard
+          uri: http://localhost:8085
+          predicates:
+            - Path=/admin
+          filters:
+            - TokenFilter
+
+        # ================= NOTIFICATION SERVICE =================
+        - id: notifications
+          uri: http://localhost:8086
+          predicates:
+            - Path=/notifications/**
+          filters:
+            - TokenFilter
 
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
@@ -66,85 +99,11 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowed-origins:
-              - "http://localhost:3000"
-            allowed-methods:
-              - GET
-              - POST
-              - PUT
-              - DELETE
-              - OPTIONS
+            allowed-origins: "*"
+            allowed-methods: "*"
             allowed-headers: "*"
-            allow-credentials: true
+            allow-credentials: false
 
 server:
   port: 9000
-
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-
-# spring:
-#   application:
-#     name: gateway
-
-#   cloud:
-#     gateway:
-#       routes:
-#         - id: userms
-#           uri: http://userms:8080
-#           predicates:
-#             - Path=/user/**
-#           filters:
-#             - TokenFilter
-
-#         - id: carowner
-#           uri: http://profile:8081
-#           predicates:
-#             - Path=/car-owners/**
-#           filters:
-#             - TokenFilter
-
-#         - id: renter
-#           uri: http://profile:8081
-#           predicates:
-#             - Path=/renters/**
-#           filters:
-#             - TokenFilter
-
-#         - id: kyc
-#           uri: http://profile:8081
-#           predicates:
-#             - Path=/kyc/**
-#           filters:
-#             - TokenFilter
-
-#         - id: vehicles
-#           uri: http://vehicle:8083
-#           predicates:
-#             - Path=/vehicles/**
-#           filters:
-#             - TokenFilter
-
-#       default-filters:
-#         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
-
-#       globalcors:
-#         cors-configurations:
-#           '[/**]':
-#             allowed-origins:
-#               - "http://localhost:3000"
-#             allowed-methods: "*"
-#             allowed-headers: "*"
-#             allow-credentials: true
-
-# server:
-#   port: 9000
-
-# eureka:
-#   client:
-#     service-url:
-#       defaultZone: http://serviceregistry:8761/eureka
+  address: 0.0.0.0

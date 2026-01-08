@@ -3,6 +3,8 @@ package com.hms.profile.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.hms.profile.helper.Status;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,6 +38,10 @@ public class Renter {
     private String aadhaarFrontUrl;
     private String aadhaarBackUrl;
     private String selfieUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Status status = Status.ACTIVE;
 
     // RENTER-SPECIFIC FIELDS
     private Double rating = 0.0;

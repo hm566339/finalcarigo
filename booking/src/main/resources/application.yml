@@ -26,4 +26,3 @@ cloudinary:
 
 server:
   port: 8084
-

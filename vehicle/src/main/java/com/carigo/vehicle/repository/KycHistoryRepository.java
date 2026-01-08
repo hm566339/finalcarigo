@@ -13,5 +13,5 @@ public interface KycHistoryRepository extends JpaRepository<KycHistory, Long> {
     Optional<KycHistory> findTop1ByVehicleIdOrderByCreatedAtDesc(String vehicleId); // ✔ latest KYC event
 
     List<KycHistory> findByVehicleIdAndActionOrderByCreatedAtDesc(String vehicleId, String action); // ✔ filter by
-                                                                                                    // action
+
 }

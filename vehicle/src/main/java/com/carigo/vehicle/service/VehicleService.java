@@ -6,6 +6,8 @@ import java.util.List;
 import com.carigo.vehicle.dto.AddVehicleRequest;
 import com.carigo.vehicle.dto.UserAndVehicleVerify;
 import com.carigo.vehicle.dto.VehicleDto;
+import com.carigo.vehicle.helper.KycStatus;
+import com.carigo.vehicle.helper.VehicleStatus;
 import com.carigo.vehicle.model.VehicleEntity;
 
 /**
@@ -33,5 +35,19 @@ public interface VehicleService {
     Boolean exitVehicleNumber(String id);
 
     Boolean verifyUserAndVehicle(UserAndVehicleVerify dto);
+
+    VehicleDto adminKycOverride(String vehicleId, KycStatus status, String reason);
+
+    VehicleDto changeStatus(String id, VehicleStatus status);
+
+    long countAllVehicles();
+
+    long countActiveVehicles();
+
+    long countBlockedVehicles();
+
+    long countPendingKycVehicles();
+
+    long countInsuranceExpiringSoon();
 
 }

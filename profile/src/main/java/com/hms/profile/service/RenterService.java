@@ -1,8 +1,11 @@
 package com.hms.profile.service;
 
+import com.hms.profile.dto.CarOwnerResponseDTO;
 import com.hms.profile.dto.RenterRequestDTO;
 import com.hms.profile.dto.RenterResponseDTO;
+import com.hms.profile.dto.UpdateUser;
 import com.hms.profile.dto.UserDTO;
+import com.hms.profile.model.ProfileKycHistory;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,5 +77,25 @@ public interface RenterService {
     Boolean isPresentDl(String dl);
 
     Boolean exitUserID(Long id);
+
+    String UpdateEmail_name(Long id, UpdateUser updateUser);
+
+    String selfieUrl(Long id);
+
+    String aadhaarBackUrl(Long id);
+
+    String aadhaarFrontUrl(Long id);
+
+    List<RenterResponseDTO> getAllRenters(int page, int size);
+
+    List<ProfileKycHistory> getRenterKycHistory(Long renterId);
+
+    RenterResponseDTO blockRenter(Long renterId);
+
+    RenterResponseDTO unblockRenter(Long renterId);
+
+    long countRenters();
+
+    long pendingRenterKyc();
 
 }

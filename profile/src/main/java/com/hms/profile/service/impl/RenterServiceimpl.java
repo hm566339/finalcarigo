@@ -1,15 +1,23 @@
 package com.hms.profile.service.impl;
 
+import com.hms.profile.dto.CarOwnerResponseDTO;
 import com.hms.profile.dto.RenterRequestDTO;
 import com.hms.profile.dto.RenterResponseDTO;
+import com.hms.profile.dto.UpdateUser;
 import com.hms.profile.dto.UserDTO;
 import com.hms.profile.exception.ResourceNotFoundException;
+import com.hms.profile.helper.Status;
+import com.hms.profile.mapper.CarOwnerMapper;
 import com.hms.profile.mapper.RenterMapper;
+import com.hms.profile.model.CarOwner;
+import com.hms.profile.model.ProfileKycHistory;
 import com.hms.profile.model.Renter;
+import com.hms.profile.repository.ProfileKycHistoryRepository;
 import com.hms.profile.repository.RenterRepository;
 import com.hms.profile.service.CloudinaryService;
 import com.hms.profile.service.RenterService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +36,7 @@ public class RenterServiceimpl implements RenterService {
 
     private final RenterRepository renterRepository;
     private final CloudinaryService cloudinaryService;
+    private final ProfileKycHistoryRepository historyRepo;
 
     // -------------------------------------------------------------------
     // CREATE RENTER
@@ -251,6 +260,93 @@ public class RenterServiceimpl implements RenterService {
     // --------------------------------------------------------------------
     public Boolean exitUserID(Long id) {
         return renterRepository.existsById(id);
+    }
+
+    public String aadhaarFrontUrl(Long id) {
+        Renter rent = getEntity(id);
+        return rent.getAadhaarBackUrl();
+    }
+
+    public String aadhaarBackUrl(Long id) {
+        Renter rent = getEntity(id);
+        return rent.getAadhaarBackUrl();
+    }
+
+    public String selfieUrl(Long id) {
+        Renter rent = getEntity(id);
+        return rent.getSelfieUrl();
+    }
+
+    @Override
+    public String UpdateEmail_name(Long id, UpdateUser updateUser) {
+
+        Renter renter = renterRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Renter not found"));
+
+        if (!renter.getEmail().equalsIgnoreCase(updateUser.getEmail()) &&
+                renterRepository.findByEmail(updateUser.getEmail()).isPresent()) {
+            throw new RuntimeException("EMAIL_ALREADY_EXISTS");
+        }
+
+        renter.setEmail(updateUser.getEmail());
+        renter.setName(updateUser.getName());
+
+        renterRepository.save(renter);
+        return "User Updated";
+    }
+
+    @Override
+    public List<RenterResponseDTO> getAllRenters(int page, int size) {
+
+        return renterRepository.findAll(PageRequest.of(page, size))
+                .stream()
+                .map(RenterMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<ProfileKycHistory> getRenterKycHistory(Long renterId) {
+
+        // renter exists check
+        renterRepository.findById(renterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Renter not found"));
+
+        return historyRepo
+                .findByProfileIdAndProfileTypeOrderByCreatedAtDesc(
+                        renterId,
+                        "RENTER");
+    }
+
+    @Override
+    @Transactional
+    public RenterResponseDTO blockRenter(Long renterId) {
+
+        Renter renter = renterRepository.findById(renterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Renter not found"));
+
+        renter.setStatus(Status.BLOCKED);
+
+        return RenterMapper.toDto(renterRepository.save(renter));
+    }
+
+    @Override
+    @Transactional
+    public RenterResponseDTO unblockRenter(Long renterId) {
+
+        Renter renter = renterRepository.findById(renterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Renter not found"));
+
+        renter.setStatus(Status.ACTIVE);
+
+        return RenterMapper.toDto(renterRepository.save(renter));
+    }
+
+    public long countRenters() {
+        return renterRepository.count();
+    }
+
+    public long pendingRenterKyc() {
+        return renterRepository.countByKycStatus("INCOMPLETE");
     }
 
 }

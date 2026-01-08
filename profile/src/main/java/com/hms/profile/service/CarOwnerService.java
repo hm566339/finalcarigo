@@ -2,7 +2,9 @@ package com.hms.profile.service;
 
 import com.hms.profile.dto.CarOwnerRequestDTO;
 import com.hms.profile.dto.CarOwnerResponseDTO;
+import com.hms.profile.dto.UpdateUser;
 import com.hms.profile.dto.UserDTO;
+import com.hms.profile.model.ProfileKycHistory;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -93,4 +95,23 @@ public interface CarOwnerService {
 
     // Boolean verifyVehicleNumber(String number);
 
+    String UpdateEmail_name(Long id, UpdateUser updateUser);
+
+    String aadharFront(Long is);
+
+    String aadharBack(Long is);
+
+    String selfie(Long is);
+
+    List<CarOwnerResponseDTO> getAllOwners(int page, int size);
+
+    List<ProfileKycHistory> getOwnerKycHistory(Long ownerId);
+
+    CarOwnerResponseDTO blockOwner(Long ownerId);
+
+    CarOwnerResponseDTO unblockOwner(Long ownerId);
+
+    long countOwners();
+
+    long pendingOwnerKyc();
 }

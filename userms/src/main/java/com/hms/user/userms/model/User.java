@@ -29,6 +29,9 @@ public class User {
 
     private Roles role;
 
+    @Column(nullable = false)
+    private boolean blocked = false;
+
     @PrePersist
     public void generateId() {
         if (this.id == null) {
@@ -43,6 +46,6 @@ public class User {
     }
 
     public UserDTO toDTO() {
-        return new UserDTO(this.id, this.name, this.email, this.password, this.role);
+        return new UserDTO(this.id, this.name, this.email, this.password, this.role, this.blocked);
     }
 }

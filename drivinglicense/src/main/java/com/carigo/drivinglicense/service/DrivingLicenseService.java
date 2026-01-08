@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.carigo.drivinglicense.dto.AddDrivingLicenseRequest;
 import com.carigo.drivinglicense.dto.DrivingLicenseDto;
+import com.carigo.drivinglicense.helper.KycStatus;
+import com.carigo.drivinglicense.model.DlKycHistory;
 
 public interface DrivingLicenseService {
 
@@ -24,4 +26,20 @@ public interface DrivingLicenseService {
     DrivingLicenseDto verify(String id, Map<String, Object> externalData);
 
     DrivingLicenseDto getByUserId(Long id);
+
+    List<DrivingLicenseDto> getByStatus(KycStatus status, int page, int size);
+
+    List<DlKycHistory> getKycHistory(String dlId);
+
+    DrivingLicenseDto adminKycOverride(
+            String dlId,
+            KycStatus status,
+            String reason);
+
+    List<DrivingLicenseDto> getExpiringDl(int days);
+
+    DrivingLicenseDto reverify(String dlId);
+
+    void deleteImages(String dlId);
+
 }

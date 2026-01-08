@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.carigo.vehicle.config.FeignConfig;
 
-@FeignClient(name = "profile", url = "http://profile:8081", configuration = FeignConfig.class)
+@FeignClient(name = "profile", url = "http://localhost:8081", configuration = FeignConfig.class)
 public interface UserVerify {
 
     @GetMapping("/car-owners/is-present/{id}")

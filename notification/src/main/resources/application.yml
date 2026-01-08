@@ -1,0 +1,49 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/carigo_notification
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: mk9504400@gmail.com
+    password: giculvqcssvxvtnv
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+notification:
+  sms:
+    provider: MOCK     # 👈 MSG91/TWILIO disabled in DEV
+    msg91:
+      api-key: ""
+      sender-id: ""
+      route: 4
+      template-id:
+        otp: ""
+        booking: ""
+
+    twilio:
+      account-sid: ""
+      auth-token: ""
+      from-number: ""
+
+  fcm:
+    enabled: false      # 👈 Firebase disabled in DEV
+    service-account-file: classpath:fcm-service-account.json

@@ -25,7 +25,7 @@ public class VerificationService {
         return externalVehicleClient.fetchByNumber(vehicleNumber);
     }
 
-    boolean matchWithExternal(VehicleEntity local, Object externalApiResponse) {
+    public boolean matchWithExternal(VehicleEntity local, Object externalApiResponse) {
 
         if (externalApiResponse == null || !(externalApiResponse instanceof Map)) {
             saveHistory(local, "FAILED", "Invalid or empty response from external API");

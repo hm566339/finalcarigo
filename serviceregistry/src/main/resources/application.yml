@@ -7,22 +7,7 @@ server:
 
 eureka:
   instance:
-    hostname: eureka-server
+    hostname: serviceregistry
   client:
     register-with-eureka: false
     fetch-registry: false
-
-
-# spring:
-#   application:
-#     name: serviceregistry
-
-# server:
-#   port: 8761
-
-# eureka:
-#   instance:
-#     hostname: serviceregistry
-#   client:
-#     register-with-eureka: false
-#     fetch-registry: false

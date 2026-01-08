@@ -2,9 +2,10 @@ package com.hms.profile.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import com.hms.profile.dto.BloodGroup;
+import com.hms.profile.helper.Status;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -55,6 +56,10 @@ public class CarOwner {
 
     // KYC STATUS
     private String kycStatus = "PENDING"; // PENDING / VERIFIED / REJECTED
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private Status status = Status.ACTIVE;
 
     // AUDIT FIELDS
     private LocalDateTime createdAt = LocalDateTime.now();

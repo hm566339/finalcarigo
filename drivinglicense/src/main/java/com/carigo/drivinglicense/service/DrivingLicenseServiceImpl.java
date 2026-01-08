@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -200,4 +201,96 @@ public class DrivingLicenseServiceImpl implements DrivingLicenseService {
 
         return DrivingLicenseMapper.toDto(dl);
     }
+
+    @Override
+    public List<DrivingLicenseDto> getByStatus(KycStatus status, int page, int size) {
+
+        return repo.findByKycStatus(
+                status,
+                PageRequest.of(page, size))
+                .stream()
+                .map(DrivingLicenseMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<DlKycHistory> getKycHistory(String dlId) {
+
+        return historyRepo.findByDlIdOrderByCreatedAtDesc(dlId);
+    }
+
+    @Override
+    public DrivingLicenseDto adminKycOverride(
+            String dlId,
+            KycStatus status,
+            String reason) {
+
+        DrivingLicenseEntity dl = repo.findById(dlId)
+                .orElseThrow(() -> new ResourceNotFoundException("DL not found"));
+
+        dl.setKycStatus(status);
+        repo.save(dl);
+
+        DlKycHistory h = new DlKycHistory();
+        h.setDlId(dlId);
+        h.setAction("ADMIN_OVERRIDE_" + status.name());
+        h.setDetail(reason);
+        historyRepo.save(h);
+
+        return DrivingLicenseMapper.toDto(dl);
+    }
+
+    @Override
+    public List<DrivingLicenseDto> getExpiringDl(int days) {
+
+        String limitDate = LocalDate.now()
+                .plusDays(days)
+                .toString(); // yyyy-MM-dd
+
+        return repo.findExpiringBefore(limitDate)
+                .stream()
+                .map(DrivingLicenseMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public DrivingLicenseDto reverify(String dlId) {
+
+        DrivingLicenseEntity dl = repo.findById(dlId)
+                .orElseThrow(() -> new ResourceNotFoundException("DL not found"));
+
+        dl.setKycStatus(KycStatus.PENDING);
+        repo.save(dl);
+
+        DlKycHistory h = new DlKycHistory();
+        h.setDlId(dlId);
+        h.setAction("REVERIFY_REQUESTED");
+        h.setDetail("User requested re-verification");
+        historyRepo.save(h);
+
+        return DrivingLicenseMapper.toDto(dl);
+    }
+
+    @Override
+    public void deleteImages(String dlId) {
+
+        DrivingLicenseEntity dl = repo.findById(dlId)
+                .orElseThrow(() -> new ResourceNotFoundException("DL not found"));
+
+        cloudinaryService.deleteByUrl(dl.getFrontImageUrl());
+        cloudinaryService.deleteByUrl(dl.getBackImageUrl());
+
+        dl.setFrontImageUrl(null);
+        dl.setBackImageUrl(null);
+        dl.setKycStatus(KycStatus.PENDING);
+
+        repo.save(dl);
+
+        DlKycHistory h = new DlKycHistory();
+        h.setDlId(dlId);
+        h.setAction("IMAGES_DELETED");
+        h.setDetail("DL images deleted, re-upload required");
+        historyRepo.save(h);
+    }
+
 }

@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: dashboard
+
+  # =========================
+  # REDIS CACHE
+  # =========================
+  cache:
+    type: redis
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2s
+
+  # =========================
+  # KAFKA (DISABLED FOR NOW)
+  # =========================
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+  # ---- Future Kafka config (UNCOMMENT WHEN NEEDED) ----
+  # kafka:
+  #   bootstrap-servers: kafka:9092
+  #   consumer:
+  #     group-id: dashboard-group
+  #     auto-offset-reset: latest
+  #     key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  #     value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  # =========================
+  # FEIGN
+  # =========================
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 5000
+
+  # =========================
+  # SECURITY (JWT)
+  # =========================
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://auth-service/.well-known/jwks.json
+
+server:
+  port: 8085
+
+# =========================
+# ACTUATOR
+# =========================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,refresh
+  endpoint:
+    health:
+      show-details: always
+
+# =========================
+# LOGGING
+# =========================
+logging:
+  level:
+    root: INFO
+    org.springframework.kafka: OFF
+    feign: INFO

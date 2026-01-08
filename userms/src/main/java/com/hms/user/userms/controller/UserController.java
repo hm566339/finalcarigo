@@ -35,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/user")
 @Validated
-@CrossOrigin
 @Slf4j
 public class UserController {
 
@@ -173,4 +172,23 @@ public class UserController {
     public ResponseEntity<List<UserResponseDTO>> healthCheck() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
+
+    @PutMapping("update/e&n/{id}")
+    public ResponseEntity<String> updateEmail_name(
+            @PathVariable Long id,
+            @RequestBody UserDTO userDTO) {
+
+        return ResponseEntity.ok(userService.updateUser(id, userDTO));
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> countAllUsers() {
+        return ResponseEntity.ok(userService.countAllUsers());
+    }
+
+    @GetMapping("/count/blocked")
+    public ResponseEntity<Long> countBlockedUsers() {
+        return ResponseEntity.ok(userService.countBlockedUsers());
+    }
+
 }

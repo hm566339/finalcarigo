@@ -6,14 +6,16 @@ import com.carigo.vehicle.dto.UserAndVehicleVerify;
 import com.carigo.vehicle.dto.VehicleDto;
 import com.carigo.vehicle.exception.ResourceNotFoundException;
 import com.carigo.vehicle.helper.KycStatus;
+import com.carigo.vehicle.helper.VehicleStatus;
 import com.carigo.vehicle.mapper.VehicleMapper;
+import com.carigo.vehicle.model.KycHistory;
 import com.carigo.vehicle.model.VehicleEntity;
+import com.carigo.vehicle.repository.KycHistoryRepository;
 import com.carigo.vehicle.repository.VehicleRepository;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.tomcat.util.openssl.pem_password_cb;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,10 +36,9 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleRepository repository;
     private final CloudinaryService cloudinaryService;
     private final VerificationService verificationService;
-
+    private final KycHistoryRepository historyRepository;
     private final UserVerify userVerify;
 
-    // CREATE VEHICLE
     @Transactional
     public void createVehicleMultipart(Long userId, AddVehicleRequest req) throws IOException {
 
@@ -50,18 +53,38 @@ public class VehicleServiceImpl implements VehicleService {
         VehicleEntity entity = VehicleMapper.toEntity(req);
         entity.setUserId(userId);
 
-        String folder = "vehicles/" + userId + "/rc";
+        String rcFolder = "vehicles/" + userId + "/rc";
+        String mediaFolder = "vehicles/" + userId + "/media";
 
-        // Upload front image
+        // ===== RC FRONT =====
         if (req.getRcFrontImage() != null && !req.getRcFrontImage().isEmpty()) {
-            String url = cloudinaryService.uploadFile(req.getRcFrontImage(), folder);
-            entity.setRcFrontImageUrl(url);
+            entity.setRcFrontImageUrl(
+                    cloudinaryService.uploadFile(req.getRcFrontImage(), rcFolder));
         }
 
-        // Upload back image
+        // ===== RC BACK =====
         if (req.getRcBackImage() != null && !req.getRcBackImage().isEmpty()) {
-            String url = cloudinaryService.uploadFile(req.getRcBackImage(), folder);
-            entity.setRcBackImageUrl(url);
+            entity.setRcBackImageUrl(
+                    cloudinaryService.uploadFile(req.getRcBackImage(), rcFolder));
+        }
+
+        // ===== VEHICLE IMAGES =====
+        if (req.getVehicleImages() != null && !req.getVehicleImages().isEmpty()) {
+            List<String> imageUrls = new java.util.ArrayList<>();
+
+            for (var img : req.getVehicleImages()) {
+                if (!img.isEmpty()) {
+                    imageUrls.add(
+                            cloudinaryService.uploadFile(img, mediaFolder));
+                }
+            }
+            entity.setVehicleImageUrls(imageUrls);
+        }
+
+        // ===== VEHICLE VIDEO =====
+        if (req.getVehicleVideo() != null && !req.getVehicleVideo().isEmpty()) {
+            entity.setVehicleVideoUrl(
+                    cloudinaryService.uploadFile(req.getVehicleVideo(), mediaFolder));
         }
 
         repository.save(entity);
@@ -115,7 +138,6 @@ public class VehicleServiceImpl implements VehicleService {
         return VehicleMapper.toDto(entity);
     }
 
-    // UPDATE VEHICLE
     @Override
     @Transactional
     @CacheEvict(value = "vehicles", allEntries = true)
@@ -124,16 +146,40 @@ public class VehicleServiceImpl implements VehicleService {
         VehicleEntity entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found"));
 
-        // Update fields
         VehicleMapper.updateEntity(entity, request);
 
-        String folder = "vehicles/" + entity.getVehicleId() + "/rc";
-        replaceImages(request, entity, folder);
+        String folder = "vehicles/" + entity.getVehicleId() + "/media";
+
+        // ===== UPDATE VEHICLE IMAGES =====
+        if (request.getVehicleImages() != null && !request.getVehicleImages().isEmpty()) {
+
+            if (entity.getVehicleImageUrls() != null) {
+                entity.getVehicleImageUrls()
+                        .forEach(cloudinaryService::deleteFile);
+            }
+
+            List<String> newImages = new java.util.ArrayList<>();
+            for (var img : request.getVehicleImages()) {
+                if (!img.isEmpty()) {
+                    newImages.add(
+                            cloudinaryService.uploadFile(img, folder));
+                }
+            }
+            entity.setVehicleImageUrls(newImages);
+        }
+
+        // ===== UPDATE VEHICLE VIDEO =====
+        if (request.getVehicleVideo() != null && !request.getVehicleVideo().isEmpty()) {
+
+            cloudinaryService.deleteFile(entity.getVehicleVideoUrl());
+
+            entity.setVehicleVideoUrl(
+                    cloudinaryService.uploadFile(request.getVehicleVideo(), folder));
+        }
 
         return VehicleMapper.toDto(repository.save(entity));
     }
 
-    // DELETE
     @Override
     @Transactional
     @CacheEvict(value = "vehicles", allEntries = true)
@@ -142,8 +188,18 @@ public class VehicleServiceImpl implements VehicleService {
         VehicleEntity entity = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found"));
 
+        // RC images
         cloudinaryService.deleteFile(entity.getRcFrontImageUrl());
         cloudinaryService.deleteFile(entity.getRcBackImageUrl());
+
+        // Vehicle images
+        if (entity.getVehicleImageUrls() != null) {
+            entity.getVehicleImageUrls()
+                    .forEach(cloudinaryService::deleteFile);
+        }
+
+        // Vehicle video
+        cloudinaryService.deleteFile(entity.getVehicleVideoUrl());
 
         repository.delete(entity);
     }
@@ -189,6 +245,7 @@ public class VehicleServiceImpl implements VehicleService {
         return exit;
     }
 
+    @Override
     public Boolean verifyUserAndVehicle(UserAndVehicleVerify dto) {
 
         // 1) Check vehicle exists
@@ -204,11 +261,69 @@ public class VehicleServiceImpl implements VehicleService {
         if (!vehicle.getUserId().equals(dto.getOwnerId())) {
             throw new ResourceNotFoundException("Vehicle does not belong to this owner");
         }
-        if (!vehicle.getPreDay().equals(dto.getPreDay())) {
-            throw new ResourceNotFoundException("Price is not equal to the vehicle per Day");
+
+        // 4) NULL-SAFE preDay comparison (FIXED)
+        if (!Objects.equals(vehicle.getPreDay(), dto.getPreDay())) {
+            throw new ResourceNotFoundException("Price does not match with vehicle per day");
         }
 
         return true;
+    }
+
+    @Transactional
+    @Override
+    public VehicleDto adminKycOverride(String vehicleId, KycStatus status, String reason) {
+
+        VehicleEntity vehicle = repository.findById(vehicleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found"));
+
+        vehicle.setKycStatus(status);
+        repository.save(vehicle);
+
+        KycHistory h = new KycHistory();
+        h.setVehicleId(vehicleId);
+        h.setAction(status.name());
+        h.setDetail("Admin override: " + reason);
+        historyRepository.save(h);
+
+        return VehicleMapper.toDto(vehicle);
+    }
+
+    @Transactional
+    @Override
+    public VehicleDto changeStatus(String id, VehicleStatus status) {
+
+        VehicleEntity vehicle = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found"));
+
+        vehicle.setStatus(status);
+        return VehicleMapper.toDto(repository.save(vehicle));
+    }
+
+    @Override
+    public long countAllVehicles() {
+        return repository.count();
+    }
+
+    @Override
+    public long countActiveVehicles() {
+        return repository.countByStatus(VehicleStatus.ACTIVE);
+    }
+
+    @Override
+    public long countBlockedVehicles() {
+        return repository.countByStatus(VehicleStatus.BLOCKED);
+    }
+
+    @Override
+    public long countPendingKycVehicles() {
+        return repository.countByKycStatus(KycStatus.PENDING);
+    }
+
+    @Override
+    public long countInsuranceExpiringSoon() {
+        return repository.countByInsuranceExpiryDateBefore(
+                LocalDate.now().plusDays(30));
     }
 
 }

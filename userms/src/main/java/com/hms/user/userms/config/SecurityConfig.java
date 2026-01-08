@@ -37,38 +37,59 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .csrf(csfr -> csfr.disable())
+                .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
+
+                        // 🌍 PUBLIC APIs (Gateway only)
                         .requestMatchers(
                                 "/user/login",
                                 "/user/register",
                                 "/user/send-otp",
                                 "/user/verify-otp")
                         .access((authentication, context) -> {
-
                             String secret = context.getRequest().getHeader("X-SECRET-KEY");
-                            boolean ok = "SECRET".equals(secret);
-
-                            return new AuthorizationDecision(ok);
+                            return new AuthorizationDecision("SECRET".equals(secret));
                         })
-                        .requestMatchers("/user/**")
+
+                        // 🗑️ DELETE APIs — ADMIN + OWNER + REANT
+                        .requestMatchers("/user/delet")
                         .access((authentication, context) -> {
 
                             String secret = context.getRequest().getHeader("X-SECRET-KEY");
                             boolean secretOK = "SECRET".equals(secret);
 
                             var authObj = authentication.get();
-                            boolean jwtOK = authObj != null && authObj.isAuthenticated();
+                            boolean allowedRoles = authObj != null &&
+                                    authObj.isAuthenticated() &&
+                                    authObj.getAuthorities().stream()
+                                            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") ||
+                                                    a.getAuthority().equals("ROLE_OWNER") ||
+                                                    a.getAuthority().equals("ROLE_REANT"));
 
-                            return new AuthorizationDecision(secretOK && jwtOK);
+                            return new AuthorizationDecision(secretOK && allowedRoles);
                         })
 
-                        .anyRequest().denyAll())
+                        // 👑 ALL OTHER APIs — ONLY ADMIN
+                        .anyRequest()
+                        .access((authentication, context) -> {
 
+                            String secret = context.getRequest().getHeader("X-SECRET-KEY");
+                            boolean secretOK = "SECRET".equals(secret);
+
+                            var authObj = authentication.get();
+                            boolean isAdmin = authObj != null &&
+                                    authObj.isAuthenticated() &&
+                                    authObj.getAuthorities().stream()
+                                            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+                            return new AuthorizationDecision(secretOK && isAdmin);
+                        }))
+
+                // 🔐 JWT FILTER
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
