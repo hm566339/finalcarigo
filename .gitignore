@@ -1,8 +1,46 @@
+# =========================
+# Java / Maven
+# =========================
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# =========================
 # Docker artifacts
+# =========================
 *.tar
 *.tar.gz
 
-# Build outputs
-target/
-build/
-node_modules/
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# IDE / OS
+# =========================
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+
+# 🔐 Key files (IMPORTANT)
+**/keys/private.pem
+**/keys/private_pkcs8.pem
+
+# ❌ Ignore generated public keys in target only
+**/target/**/keys/*.pem
+
+# =========================
+# Test / Coverage
+# =========================
+**/test-output/
+**/coverage/
