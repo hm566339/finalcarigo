@@ -5,11 +5,11 @@ import lombok.experimental.UtilityClass;
 import java.util.List;
 
 import com.carigo.dashboard.dto.AdminDashboardDTO;
-import com.carigo.dashboard.dto.BookingStats;
-import com.carigo.dashboard.dto.BookingTrends;
-import com.carigo.dashboard.dto.KycStats;
-import com.carigo.dashboard.dto.PlatformStats;
-import com.carigo.dashboard.dto.VehicleStats;
+import com.carigo.dashboard.entity.BookingStats;
+import com.carigo.dashboard.entity.BookingTrends;
+import com.carigo.dashboard.entity.KycStats;
+import com.carigo.dashboard.entity.PlatformStats;
+import com.carigo.dashboard.entity.VehicleStats;
 
 @UtilityClass
 public class AdminDashboardMapper {

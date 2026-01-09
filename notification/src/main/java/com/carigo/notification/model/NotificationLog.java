@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.carigo.notification.helper.ChannelType;
 import com.carigo.notification.helper.NotificationEventType;
+import com.carigo.notification.helper.NotificationStatus;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -26,7 +27,9 @@ public class NotificationLog {
     private ChannelType channelType;
 
     private String target; // email / phone / fcm token
-    private String status; // SUCCESS / FAILED
+
+    @Enumerated(EnumType.STRING)
+    private NotificationStatus status;
 
     private String errorMessage;
 

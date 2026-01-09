@@ -28,7 +28,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     public JwtAuthFilter() {
         try {
-            // Load public.pem
             ClassPathResource resource = new ClassPathResource("keys/public.pem");
             String key = new String(resource.getInputStream().readAllBytes());
 
@@ -45,8 +44,39 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
     }
 
+    // 🔥 SERVICE USE
+    public Long extractUserId(String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+
+        Claims claims = Jwts.parser()
+                .verifyWith(publicKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        // ✅ JWT me "id" hi actual USER ID hai
+        Object idObj = claims.get("id");
+
+        if (idObj == null) {
+            throw new RuntimeException("JWT does not contain id claim");
+        }
+
+        try {
+            return Long.parseLong(idObj.toString());
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("Invalid id in JWT: " + idObj);
+        }
+    }
+
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest req,
+            HttpServletResponse res,
+            FilterChain chain)
             throws ServletException, IOException {
 
         String authHeader = req.getHeader("Authorization");
@@ -56,28 +86,26 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
-
         try {
-            // Signature verify + decode
+            String token = authHeader.substring(7);
+
             Claims claims = Jwts.parser()
-                    .verifyWith(publicKey) // 🔥 Signature verification
+                    .verifyWith(publicKey)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
 
-            String username = claims.getSubject();
             String role = claims.get("role", String.class);
 
             var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(username, null,
-                    authorities);
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    claims.getSubject(), null, authorities);
 
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (Exception e) {
-            System.out.println("JWT ERROR in UserService: " + e.getMessage());
+            SecurityContextHolder.clearContext();
         }
 
         chain.doFilter(req, res);

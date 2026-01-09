@@ -5,12 +5,12 @@ import com.carigo.dashboard.client.ProfileClient;
 import com.carigo.dashboard.client.UserClient;
 import com.carigo.dashboard.client.VehicleClient;
 import com.carigo.dashboard.dto.AdminDashboardDTO;
-import com.carigo.dashboard.dto.BookingStats;
-import com.carigo.dashboard.dto.BookingTrendDTO;
-import com.carigo.dashboard.dto.BookingTrends;
-import com.carigo.dashboard.dto.KycStats;
-import com.carigo.dashboard.dto.PlatformStats;
-import com.carigo.dashboard.dto.VehicleStats;
+import com.carigo.dashboard.entity.BookingStats;
+import com.carigo.dashboard.entity.BookingTrendDTO;
+import com.carigo.dashboard.entity.BookingTrends;
+import com.carigo.dashboard.entity.KycStats;
+import com.carigo.dashboard.entity.PlatformStats;
+import com.carigo.dashboard.entity.VehicleStats;
 import com.carigo.dashboard.mapper.AdminDashboardMapper;
 import com.carigo.dashboard.service.AdminDashboardService;
 

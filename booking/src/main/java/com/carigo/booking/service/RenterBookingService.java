@@ -10,7 +10,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -86,5 +85,24 @@ public class RenterBookingService {
     private Booking getBooking(Long id) {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
+    }
+
+    // ================= COMPLETED BOOKINGS =================
+    public long countCompletedBookings(Long renterId) {
+        return bookingRepository.countByRenterIdAndStatus(
+                renterId,
+                BookingStatus.COMPLETED);
+    }
+
+    // ================= CURRENT TRIP =================
+    public BookingResponseDTO getCurrentTrip(Long renterId) {
+
+        Booking booking = bookingRepository
+                .findFirstByRenterIdAndStatusOrderByStartDateDesc(
+                        renterId,
+                        BookingStatus.ONGOING)
+                .orElse(null);
+
+        return bookingMapper.toDTO(booking);
     }
 }

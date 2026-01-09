@@ -19,7 +19,7 @@ public interface VehicleRepository extends JpaRepository<VehicleEntity, String> 
 
     List<VehicleEntity> findByUserId(Long userId);
 
-    boolean existsByUserId(Long userId); // ✔ correct method
+    boolean existsByUserId(Long userId);
 
     void deleteByVehicleId(String vehicleId);
 
@@ -28,5 +28,16 @@ public interface VehicleRepository extends JpaRepository<VehicleEntity, String> 
     long countByKycStatus(KycStatus status);
 
     long countByInsuranceExpiryDateBefore(LocalDate date);
+
+    // ✅ OWNER = userId
+    long countByUserId(Long userId);
+
+    // ✅ ACTIVE = status = ACTIVE
+    long countByUserIdAndStatus(Long userId, VehicleStatus status);
+
+    long countByUserIdAndInsuranceExpiryDateAfterAndInsuranceExpiryDateBefore(
+            Long userId,
+            LocalDate start,
+            LocalDate end);
 
 }

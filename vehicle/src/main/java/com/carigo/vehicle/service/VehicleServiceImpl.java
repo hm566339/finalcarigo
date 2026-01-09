@@ -4,6 +4,7 @@ import com.carigo.vehicle.client.UserVerify;
 import com.carigo.vehicle.dto.AddVehicleRequest;
 import com.carigo.vehicle.dto.UserAndVehicleVerify;
 import com.carigo.vehicle.dto.VehicleDto;
+import com.carigo.vehicle.dto.VehicleStats;
 import com.carigo.vehicle.exception.ResourceNotFoundException;
 import com.carigo.vehicle.helper.KycStatus;
 import com.carigo.vehicle.helper.VehicleStatus;
@@ -326,4 +327,31 @@ public class VehicleServiceImpl implements VehicleService {
                 LocalDate.now().plusDays(30));
     }
 
+    @Override
+    public VehicleStats getVehicleStats(Long ownerId) {
+        long total = repository.countByUserId(ownerId);
+        long active = repository.countByUserIdAndStatus(
+                ownerId, VehicleStatus.ACTIVE);
+
+        long inactive = total - active;
+
+        return VehicleStats.builder()
+                .total(total)
+                .active(active)
+                .inactive(inactive)
+                .build();
+    }
+
+    @Override
+    public long countInsuranceExpiring(Long ownerId) {
+
+        LocalDate today = LocalDate.now();
+
+        return repository
+                .countByUserIdAndInsuranceExpiryDateAfterAndInsuranceExpiryDateBefore(
+                        ownerId,
+                        today,
+                        today.plusDays(30) // next 30 days
+                );
+    }
 }

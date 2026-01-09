@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.List;
 
+import com.carigo.dashboard.entity.BookingStats;
+import com.carigo.dashboard.entity.CurrentTrip;
+import com.carigo.dashboard.entity.Spending;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -32,4 +36,6 @@ public class RenterDashboardDTO implements Serializable {
 
     // Alerts
     private List<String> alerts;
+
+    private long totalBookings;
 }

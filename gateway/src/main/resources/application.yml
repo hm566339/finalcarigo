@@ -81,7 +81,7 @@ spring:
         - id: admin-dashboard
           uri: http://localhost:8085
           predicates:
-            - Path=/admin
+            - Path=/dashboard/**
           filters:
             - TokenFilter
 

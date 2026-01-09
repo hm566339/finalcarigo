@@ -1,6 +1,8 @@
 package com.carigo.booking.controller;
 
 import com.carigo.booking.dto.BookingResponseDTO;
+import com.carigo.booking.entity.BookingStats;
+import com.carigo.booking.entity.CurrentTrip;
 import com.carigo.booking.service.OwnerBookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -59,4 +61,23 @@ public class OwnerBookingController {
             @RequestParam Long ownerId) {
         return ownerBookingService.getOngoingBookings(ownerId);
     }
+
+    // ================= OWNER DASHBOARD =================
+
+    // Booking statistics (dashboard)
+    @GetMapping("/stats")
+    public BookingStats bookingStats(@RequestParam Long ownerId) {
+        return ownerBookingService.getBookingStats(ownerId);
+    }
+
+    @GetMapping("/current-trip")
+    public CurrentTrip currentTrip(@RequestParam Long ownerId) {
+        return ownerBookingService.getCurrentTrip(ownerId);
+    }
+
+    @GetMapping("/disputes/count")
+    public long disputeCount(@RequestParam Long ownerId) {
+        return ownerBookingService.countDisputes(ownerId);
+    }
+
 }

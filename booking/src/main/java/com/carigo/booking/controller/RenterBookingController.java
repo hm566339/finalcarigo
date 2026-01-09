@@ -60,4 +60,15 @@ public class RenterBookingController {
             @RequestParam Long renterId) {
         return renterBookingService.getActiveBookings(renterId);
     }
+
+    @GetMapping("/completed")
+    public long completedBookings(@RequestParam Long renterId) {
+        return renterBookingService.countCompletedBookings(renterId);
+    }
+
+    @GetMapping("/current")
+    public BookingResponseDTO currentTrip(@RequestParam Long renterId) {
+        return renterBookingService.getCurrentTrip(renterId);
+    }
+
 }

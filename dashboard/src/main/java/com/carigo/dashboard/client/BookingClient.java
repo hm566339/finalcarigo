@@ -4,9 +4,13 @@ import java.util.List;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import com.carigo.dashboard.dto.BookingTrendDTO;
-import com.carigo.dashboard.dto.BookingTrends;
+import com.carigo.dashboard.entity.BookingResponseDTO;
+import com.carigo.dashboard.entity.BookingStats;
+import com.carigo.dashboard.entity.BookingTrendDTO;
+import com.carigo.dashboard.entity.BookingTrends;
+import com.carigo.dashboard.entity.CurrentTrip;
 
 @FeignClient(name = "booking-service", url = "http://localhost:8084")
 public interface BookingClient {
@@ -41,4 +45,31 @@ public interface BookingClient {
     @GetMapping("/admin/bookings/booking-trends")
     List<BookingTrendDTO> bookingTrends();
 
+    // 📊 Booking stats
+    @GetMapping("/owner/bookings/stats")
+    BookingStats bookingStats(@RequestParam("ownerId") Long ownerId);
+
+    // 🚗 Current ongoing trip
+    @GetMapping("/owner/bookings/current-trip")
+    CurrentTrip currentTrip(@RequestParam("ownerId") Long ownerId);
+
+    // ⚠️ Disputes count (optional)
+    @GetMapping("/owner/bookings/disputes/count")
+    long disputeCount(@RequestParam("ownerId") Long ownerId);
+
+    // 📊 total bookings
+    @GetMapping("/renter/bookings/count")
+    long countTotal(@RequestParam Long renterId);
+
+    // 🔥 active bookings (PENDING, APPROVED, PAID, ONGOING)
+    @GetMapping("/renter/bookings/active")
+    List<BookingResponseDTO> activeBookings(@RequestParam Long renterId);
+
+    // 📅 completed bookings
+    @GetMapping("/renter/bookings/completed")
+    long completedBookings(@RequestParam Long renterId);
+
+    // 🚗 current ongoing trip
+    @GetMapping("/renter/bookings/current")
+    BookingResponseDTO currentRenterTrip(@RequestParam Long renterId);
 }

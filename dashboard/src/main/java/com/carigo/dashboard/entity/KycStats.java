@@ -1,4 +1,4 @@
-package com.carigo.dashboard.dto;
+package com.carigo.dashboard.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +11,9 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class VehicleStats implements Serializable {
+public class KycStats implements Serializable {
 
-    private long total;
-    private long active;
-    private long pendingKyc;
-    private long blocked;
+    private long ownerPending;
+    private long renterPending;
+    private long vehiclePending;
 }

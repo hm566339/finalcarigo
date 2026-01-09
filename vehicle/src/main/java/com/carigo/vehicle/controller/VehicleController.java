@@ -7,6 +7,7 @@ import com.carigo.vehicle.dto.PriceQuoteDto;
 import com.carigo.vehicle.dto.PriceQuoteRequest;
 import com.carigo.vehicle.dto.UserAndVehicleVerify;
 import com.carigo.vehicle.dto.VehicleDto;
+import com.carigo.vehicle.dto.VehicleStats;
 import com.carigo.vehicle.helper.KycStatus;
 import com.carigo.vehicle.helper.VehicleStatus;
 import com.carigo.vehicle.model.KycHistory;
@@ -217,6 +218,18 @@ public class VehicleController {
     @GetMapping("/insurance/expiring")
     public long insuranceExpiringSoon() {
         return vehicleService.countInsuranceExpiringSoon();
+    }
+
+    @GetMapping("owner/stats")
+    public VehicleStats getOwnerVehicleStats(@RequestParam Long ownerId) {
+        return vehicleService.getVehicleStats(ownerId);
+    }
+
+    @GetMapping("/insurance/expiring/owner")
+    public long insuranceExpiring(
+            @RequestParam Long ownerId) {
+
+        return vehicleService.countInsuranceExpiring(ownerId);
     }
 
 }

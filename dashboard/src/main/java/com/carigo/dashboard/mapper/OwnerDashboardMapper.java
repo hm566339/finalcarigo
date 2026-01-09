@@ -1,62 +1,73 @@
 package com.carigo.dashboard.mapper;
 
+import com.carigo.dashboard.dto.*;
+import com.carigo.dashboard.entity.BookingStats;
+import com.carigo.dashboard.entity.CurrentTrip;
+import com.carigo.dashboard.entity.Earnings;
+import com.carigo.dashboard.entity.OwnerAlerts;
+import com.carigo.dashboard.entity.OwnerSummary;
+import com.carigo.dashboard.entity.VehicleStats;
+
 import lombok.experimental.UtilityClass;
-
-import java.util.List;
-import java.util.Map;
-
-import com.carigo.dashboard.dto.BookingStats;
-import com.carigo.dashboard.dto.Earnings;
-import com.carigo.dashboard.dto.OwnerDashboardDTO;
 
 @UtilityClass
 public class OwnerDashboardMapper {
 
-    public OwnerDashboardDTO map(
-            Long ownerId,
-            Map<String, Object> ownerProfile,
-            List<?> vehicles,
+    /**
+     * Build full owner dashboard response
+     */
+    public static OwnerDashboardResponse mapToDashboard(
+            OwnerSummary owner,
             BookingStats bookingStats,
+            VehicleStats vehicleStats,
             Earnings earnings,
-            double rating,
-            int reviews,
-            List<String> alerts) {
+            CurrentTrip currentTrip,
+            OwnerAlerts alerts) {
 
-        return OwnerDashboardDTO.builder()
-                .ownerId(ownerId)
-                .ownerName((String) ownerProfile.get("name"))
-                .kycStatus(String.valueOf(ownerProfile.get("kycStatus")))
-
-                .totalCars(vehicles.size())
-                .activeCars((int) vehicles.stream()
-                        .filter(v -> "ACTIVE".equals(getField(v, "status")))
-                        .count())
-                .inactiveCars((int) vehicles.stream()
-                        .filter(v -> !"ACTIVE".equals(getField(v, "status")))
-                        .count())
-
+        return OwnerDashboardResponse.builder()
+                .owner(owner)
                 .bookingStats(bookingStats)
+                .vehicleStats(vehicleStats)
                 .earnings(earnings)
-
-                .averageRating(rating)
-                .totalReviews(reviews)
-
+                .currentTrip(currentTrip)
                 .alerts(alerts)
                 .build();
     }
 
-    // Safe reflection-based getter (Feign response friendly)
-    private static Object getField(Object obj, String field) {
-        try {
-            return obj.getClass()
-                    .getMethod("get" + capitalize(field))
-                    .invoke(obj);
-        } catch (Exception e) {
-            return null;
-        }
+    /**
+     * Create OwnerSummary from raw values (service layer call)
+     */
+    public static OwnerSummary buildOwnerSummary(
+            Long ownerId,
+            String name,
+            double rating,
+            String kycStatus,
+            boolean blocked) {
+
+        return OwnerSummary.builder()
+                .ownerId(ownerId)
+                .name(name)
+                .rating(rating)
+                .kycStatus(kycStatus)
+                .blocked(blocked)
+                .build();
     }
 
-    private static String capitalize(String s) {
-        return s.substring(0, 1).toUpperCase() + s.substring(1);
+    /**
+     * Empty fallback dashboard (Redis miss / error)
+     */
+    public static OwnerDashboardResponse emptyDashboard(Long ownerId) {
+
+        return OwnerDashboardResponse.builder()
+                .owner(
+                        OwnerSummary.builder()
+                                .ownerId(ownerId)
+                                .build())
+                .bookingStats(BookingStats.builder().build())
+                .vehicleStats(VehicleStats.builder().build())
+                .earnings(Earnings.builder().build())
+                .currentTrip(null)
+                .alerts(OwnerAlerts.builder().build())
+                .build();
     }
 }

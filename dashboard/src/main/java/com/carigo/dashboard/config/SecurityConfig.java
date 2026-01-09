@@ -16,7 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(jsr250Enabled = true) // 🔥 Needed for @RolesAllowed
+@EnableMethodSecurity(jsr250Enabled = true)
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -46,53 +46,62 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🗑️ DELETE APIs — ADMIN + OWNER + REANT
-                        .requestMatchers("/renters/**")
+                        // 🟢 OWNER DASHBOARD
+                        .requestMatchers("/dashboard/owner/**")
                         .access((authentication, context) -> {
 
                             String secret = context.getRequest().getHeader("X-SECRET-KEY");
                             boolean secretOK = "SECRET".equals(secret);
 
                             var authObj = authentication.get();
-                            boolean allowedRoles = authObj != null &&
-                                    authObj.isAuthenticated() &&
-                                    authObj.getAuthorities().stream()
-                                            .anyMatch(a -> a.getAuthority().equals("ROLE_REANT"));
-
-                            return new AuthorizationDecision(secretOK && allowedRoles);
-                        })
-                        .requestMatchers("/car-owners/**")
-                        .access((authentication, context) -> {
-
-                            String secret = context.getRequest().getHeader("X-SECRET-KEY");
-                            boolean secretOK = "SECRET".equals(secret);
-
-                            var authObj = authentication.get();
-                            boolean allowedRoles = authObj != null &&
+                            boolean allowed = authObj != null &&
                                     authObj.isAuthenticated() &&
                                     authObj.getAuthorities().stream()
                                             .anyMatch(a -> a.getAuthority().equals("ROLE_OWNER"));
 
-                            return new AuthorizationDecision(secretOK && allowedRoles);
+                            return new AuthorizationDecision(secretOK && allowed);
                         })
 
-                        // 👑 ALL OTHER APIs — ONLY ADMIN
-                        .requestMatchers("/admin/**")
+                        // 🟢 RENTER DASHBOARD
+                        .requestMatchers("/dashboard/renter/**")
                         .access((authentication, context) -> {
 
                             String secret = context.getRequest().getHeader("X-SECRET-KEY");
                             boolean secretOK = "SECRET".equals(secret);
 
                             var authObj = authentication.get();
-                            boolean isAdmin = authObj != null &&
+                            boolean allowed = authObj != null &&
+                                    authObj.isAuthenticated() &&
+                                    authObj.getAuthorities().stream()
+                                            .anyMatch(a -> a.getAuthority().equals("ROLE_REANT"));
+
+                            return new AuthorizationDecision(secretOK && allowed);
+                        })
+
+                        // 🟢 ADMIN DASHBOARD
+                        .requestMatchers("/dashboard/admin/**")
+                        .access((authentication, context) -> {
+
+                            String secret = context.getRequest().getHeader("X-SECRET-KEY");
+                            boolean secretOK = "SECRET".equals(secret);
+
+                            var authObj = authentication.get();
+                            boolean allowed = authObj != null &&
                                     authObj.isAuthenticated() &&
                                     authObj.getAuthorities().stream()
                                             .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-                            return new AuthorizationDecision(secretOK && isAdmin);
-                        }))
+                            return new AuthorizationDecision(secretOK && allowed);
+                        })
 
-                // 🔐 JWT FILTER
+                        // ❌ BLOCK ANY OTHER DASHBOARD PATH
+                        .requestMatchers("/dashboard/**")
+                        .denyAll()
+
+                        // ❌ BLOCK EVERYTHING ELSE
+                        .anyRequest().denyAll())
+
+                // 🔐 JWT FILTER (VERY IMPORTANT)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

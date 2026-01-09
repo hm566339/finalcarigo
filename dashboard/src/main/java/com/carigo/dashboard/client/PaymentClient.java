@@ -1,4 +1,5 @@
 // package com.carigo.dashboard.client;
+// package com.carigo.dashboard.client;
 
 // import org.springframework.cloud.openfeign.FeignClient;
 // import org.springframework.web.bind.annotation.GetMapping;

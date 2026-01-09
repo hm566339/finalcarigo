@@ -1,6 +1,8 @@
 package com.carigo.booking.service;
 
 import com.carigo.booking.dto.BookingResponseDTO;
+import com.carigo.booking.entity.BookingStats;
+import com.carigo.booking.entity.CurrentTrip;
 import com.carigo.booking.helper.BookingStatus;
 import com.carigo.booking.mapper.BookingMapper;
 import com.carigo.booking.model.Booking;
@@ -65,4 +67,29 @@ public class OwnerBookingService {
         return bookingRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
     }
+
+    public BookingStats getBookingStats(Long ownerId) {
+        long total = bookingRepository.countByOwnerId(ownerId);
+        long ongoing = bookingRepository.countByOwnerIdAndStatus(ownerId, BookingStatus.ONGOING);
+        long completed = bookingRepository.countByOwnerIdAndStatus(ownerId, BookingStatus.COMPLETED);
+
+        return BookingStats.builder()
+                .total(total)
+                .ongoing(ongoing)
+                .completed(completed)
+                .build();
+    }
+
+    public CurrentTrip getCurrentTrip(Long ownerId) {
+
+        return bookingRepository
+                .findOngoingBooking(ownerId) // ✅ Optional<Booking>
+                .map(CurrentTrip::fromBooking) // ✅ mapping safe
+                .orElse(null); // ✅ no error
+    }
+
+    public long countDisputes(Long ownerId) {
+        return bookingRepository.countOwnerDisputes(ownerId);
+    }
+
 }

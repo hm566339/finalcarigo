@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.carigo.notification.dto.NotificationRequest;
 import com.carigo.notification.helper.ChannelType;
 import com.carigo.notification.helper.NotificationEventType;
+import com.carigo.notification.helper.NotificationStatus;
 import com.carigo.notification.model.NotificationLog;
 import com.carigo.notification.repository.NotificationLogRepository;
 
@@ -69,9 +70,9 @@ public class NotificationService {
 
         try {
             action.run();
-            log.setStatus("SUCCESS");
+            log.setStatus(NotificationStatus.UNREAD); // ✅ SUCCESS → UNREAD
         } catch (Exception e) {
-            log.setStatus("FAILED");
+            log.setStatus(NotificationStatus.FAILED); // ✅ enum
             log.setErrorMessage(e.getMessage());
         }
 
@@ -143,4 +144,10 @@ public class NotificationService {
                 "FAILED", failed);
     }
 
+    public long unreadCount(Long userId) {
+        return logRepository.countByUserIdAndStatus(
+                userId,
+                NotificationStatus.UNREAD);
+
+    }
 }

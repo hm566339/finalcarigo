@@ -78,4 +78,10 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getNotificationStats());
     }
 
+    @GetMapping("/user/{userId}/unread-count")
+    public ResponseEntity<Long> unreadCount(@PathVariable Long userId) {
+        return ResponseEntity.ok(
+                notificationService.unreadCount(userId));
+    }
+
 }

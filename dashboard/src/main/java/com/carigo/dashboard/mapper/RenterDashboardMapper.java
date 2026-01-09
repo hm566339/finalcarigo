@@ -1,38 +1,38 @@
 package com.carigo.dashboard.mapper;
 
-import lombok.experimental.UtilityClass;
+import org.springframework.stereotype.Component;
+
+import com.carigo.dashboard.dto.RenterDashboardDTO;
+import com.carigo.dashboard.entity.BookingStats;
+import com.carigo.dashboard.entity.CurrentTrip;
+import com.carigo.dashboard.entity.Spending;
 
 import java.util.List;
-import java.util.Map;
 
-import com.carigo.dashboard.dto.BookingStats;
-import com.carigo.dashboard.dto.CurrentTrip;
-import com.carigo.dashboard.dto.RenterDashboardDTO;
-import com.carigo.dashboard.dto.Spending;
-
-@UtilityClass
+@Component
 public class RenterDashboardMapper {
 
-    public RenterDashboardDTO map(
+    public RenterDashboardDTO toDashboard(
             Long renterId,
-            Map<String, Object> renterProfile,
+            String renterName,
+            String kycStatus,
             BookingStats bookingStats,
             CurrentTrip currentTrip,
             Spending spending,
-            double rating,
-            List<String> alerts) {
+            double averageRating,
+            List<String> alerts,
+            long totalBookings) {
 
         return RenterDashboardDTO.builder()
                 .renterId(renterId)
-                .renterName((String) renterProfile.get("name"))
-                .kycStatus(String.valueOf(renterProfile.get("kycStatus")))
-
+                .renterName(renterName)
+                .kycStatus(kycStatus)
                 .bookingStats(bookingStats)
                 .currentTrip(currentTrip)
                 .spending(spending)
-                .averageRating(rating)
-
+                .averageRating(averageRating)
                 .alerts(alerts)
+                .totalBookings(totalBookings)
                 .build();
     }
 }

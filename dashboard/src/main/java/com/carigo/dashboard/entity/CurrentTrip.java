@@ -1,4 +1,4 @@
-package com.carigo.dashboard.dto;
+package com.carigo.dashboard.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
