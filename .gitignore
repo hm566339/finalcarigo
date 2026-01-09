@@ -1,0 +1,8 @@
+# Docker artifacts
+*.tar
+*.tar.gz
+
+# Build outputs
+target/
+build/
+node_modules/
